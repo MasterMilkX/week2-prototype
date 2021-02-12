@@ -31,6 +31,13 @@ var actionKeySet = [a_key, b_key];
 var keys = [];
 
 
+var player = {
+	x : canvas.width/2,
+	y : canvas.height/2,
+	size : 16,
+	speed : 3
+}
+
 
 //////////////////    GENERIC FUNCTIONS   ///////////////
 
@@ -106,6 +113,10 @@ function render(){
 	ctx.fillRect(0,0,canvas.width, canvas.height);
 	
 	/*   add draw functions here  */
+
+	//draw a red box to represent the player
+	ctx.fillStyle = "#f00";
+	ctx.fillRect(player.x-player.size/2,player.y-player.size/2,player.size,player.size)
 	
 	ctx.restore();
 }
@@ -137,6 +148,16 @@ function main(){
 		kt = 0;
 		keyTick=0;
 	}
+
+	//movement
+	if(keys[upKey])
+		player.y -= player.speed;
+	if(keys[downKey])
+		player.y += player.speed;
+	if(keys[leftKey])
+		player.x -= player.speed;
+	if(keys[rightKey])
+		player.x += player.speed;
 
 	//debug
 	var settings = "debug here";
