@@ -46,7 +46,8 @@ var ai = {
 	charged : true,				//whether in the middle of an attack
 	maxSpeed : player.speed*3,		//max speed to attack (dependent on player)
 	target : {x : 0, y : 0},
-	delay : 500					//attack delay
+	delay : 500,					//attack delay
+	canMove : true
 }
 var gracePeriod = false;		//grace period for the player if it gets hit
 
@@ -273,6 +274,11 @@ function changeChecks(selectType){
 	}
 }
 
+//toggle ai movement
+function togAI(c){
+	ai.canMove = c;
+}
+
 //main game loop
 function main(){
 	requestAnimationFrame(main);
@@ -306,7 +312,7 @@ function main(){
 	
 
 	//ai behavior
-	if(ai.charged){
+	if(ai.canMove && ai.charged){
 		//keep moving to target
 		if(Math.round(dist(ai,ai.target)) > ai.maxSpeed){
 			//acceleration / decceleration
