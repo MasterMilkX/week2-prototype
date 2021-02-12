@@ -17,20 +17,20 @@ var camera = {
 //KEYS
 
 // directionals
-var upKey = 38;     //[Up]
-var leftKey = 37;   //[Left]
-var rightKey = 39;  //[Rigt]
-var downKey = 40;   //[Down]
+var upKey = 87;     //[W]
+var leftKey = 65;   //[A]
+var rightKey = 68;  //[S]
+var downKey = 83;   //[D]
 var moveKeySet = [upKey, leftKey, rightKey, downKey];
 
 // A and b
-var a_key = 90;   //[Z]
-var b_key = 88;   //[X]
+var a_key = 79;   //[O]
+var b_key = 80;   //[P]
 var actionKeySet = [a_key, b_key];
 
 var keys = [];
 
-
+//box character
 var player = {
 	x : canvas.width/2,
 	y : canvas.height/2,
