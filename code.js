@@ -5,8 +5,6 @@ canvas.width = 320;
 canvas.height = 320;
 //document.body.appendChild(canvas);
 
-var size = 16;
-
 //camera
 var camera = {
 	x : 0,
@@ -35,10 +33,24 @@ var keys = [];
 var player = {
 	x : canvas.width/2,
 	y : canvas.height/2,
-	size : 16,
 	speed : 3,
 	color : '#f00'
 }
+
+//attacking ai
+var ai = {
+	x : 75,
+	y : 75,
+	color : "#0D7612",
+	vel : {x : 0, y : 0},
+	charged : true,				//whether in the middle of an attack
+	maxSpeed : player.speed*3,		//max speed to attack (dependent on player)
+	target : {x : 0, y : 0},
+	delay : 500					//attack delay
+}
+var gracePeriod = false;		//grace period for the player if it gets hit
+
+var size = 16;
 
 
 //////////////////    GENERIC FUNCTIONS   ///////////////
@@ -102,6 +114,79 @@ function panCamera(){
 }
 */
 
+//////////////////  AI FUNCTIONS  ////////////////////
+
+//euclidean distance function
+function dist(a,b){return Math.sqrt(Math.pow(b.x-a.x,2)+Math.pow(b.y-a.y,2));}
+
+//velocity control
+function velControl(cur, value, max){
+	//too small to divide
+	if(Math.abs(value) <= 3)
+		return value;
+
+	value = Math.round(value);
+
+	//increment or decrement based on how close the max (target) is
+	if(value > 0){
+		if((cur + value) > max)
+		  	return velControl(cur, Math.floor(value/2), max);
+		else
+		  	return value;
+	}else if(value < 0){
+		if((cur + value) < max)
+		  	return velControl(cur, Math.floor(value/2), max);
+		else
+		  	return value;
+	}else{
+		return 1;
+	}
+}
+
+//tries to pass thru the player to attack it
+function targetPlayer(){
+	let ed = player.speed*3;		//extra distance - how much farther to go past the player (so to try to predict trajectory)
+
+	//get direction vector
+	let yDir = Math.round(player.y-ai.y);
+	let xDir = Math.round(player.x-ai.x);
+
+	ai.target = {x: player.x, y:player.y}		//set target to current player position
+
+	//get direction vector from distance
+	let d = dist(ai,ai.target);
+	let sm =  ai.maxSpeed/d;		//speed / distance (how much ground to cover)
+
+	//calculate velocity
+	ai.vel.x = sm*(ai.target.x-ai.x);
+	ai.vel.y = sm*(ai.target.y-ai.y);
+
+	//add modifier for extra distance
+	ai.target.x += ai.vel.x*ed;
+	ai.target.y += ai.vel.y*ed;
+	
+}
+
+//check if ai hit the player
+function collided(){
+	//player dimensions (top left to bottom right corners)
+	let px = player.x-size/2;	
+	let py = player.y-size/2;	
+	let pw = px+size;			
+	let ph = py+size;			
+
+	//ai dimensions (top left to bottom right corners)
+	let ax = ai.x-size/2;
+	let ay = ai.y-size/2;
+	let aw = ax+size;	
+	let ah = ay+size;
+
+	//within box boundaries
+	return (px < aw && pw > ax && py < ah && ph > ay);
+
+}
+
+
 
 //////////////////  RENDER FUNCTIONS  ////////////////////
 
@@ -118,7 +203,15 @@ function render(){
 
 	//draw a red box to represent the player
 	ctx.fillStyle = player.color
-	ctx.fillRect(player.x-player.size/2,player.y-player.size/2,player.size,player.size)
+	ctx.fillRect(player.x-size/2,player.y-size/2,size,size)
+
+	//draw a dark green square to represent the AI
+	ctx.fillStyle = ai.color;
+	ctx.fillRect(ai.x-size/2,ai.y-size/2,size,size);
+
+	//draw ai target
+	ctx.fillStyle = "#000";
+	ctx.fillText("X", ai.target.x, ai.target.y);
 	
 	ctx.restore();
 }
@@ -129,21 +222,44 @@ function render(){
 
 //game initialization function
 function init(){
+	//set checkbox onchange functions
 	let checkboxes = document.getElementsByClassName("featTog");
 	for(let c=0;c<checkboxes.length;c++){
 		checkboxes[c].onchange = function(){changeFeature(checkboxes[c].id)};
 	}
+	changeChecks('select');		//select all to start
+
+	targetPlayer();
+
+
 }
 
 //changes some feature of the game to show juiciness
+//add a new one for each feature
 function changeFeature(feat){
-	console.log("changing " + feat);
+	//console.log("changing " + feat);
+
+	//demo
 	if(feat == "color"){
 		player.color = (player.color == "#f00" ? "#00f" : "#f00");
 	}else if(feat == "speed"){
 		player.speed = (player.speed == 3 ? 5 : 3);
 	}else if(feat == "background"){
 		backgroundColor = (backgroundColor == "#dedede" ? "#000" : "#dedede");
+	}
+
+	else if(feat == "dash"){
+
+	}else if(feat == "pause"){
+		
+	}else if(feat == "dark"){
+		
+	}else if(feat == "camera"){
+		
+	}else if(feat == "slomo"){
+		
+	}else if(feat == "trail"){
+		
 	}
 }
 
@@ -153,6 +269,7 @@ function changeChecks(selectType){
 	let checkboxes = document.getElementsByClassName("featTog");
 	for(let c=0;c<checkboxes.length;c++){
 		checkboxes[c].checked = val;
+		changeFeature(checkboxes[c].id)
 	}
 }
 
@@ -175,20 +292,51 @@ function main(){
 		keyTick=0;
 	}
 
-	//movement
-	if(keys[upKey] && (player.y-player.size/2) > 0)
+	//movement + boundary
+	if(keys[upKey] && (player.y-size/2) > 0)
 		player.y -= player.speed;
-	if(keys[downKey] && (player.y+player.size/2) < canvas.height)
+	if(keys[downKey] && (player.y+size/2) < canvas.height)
 		player.y += player.speed;
-	if(keys[leftKey] && (player.x-player.size/2) > 0)
+	if(keys[leftKey] && (player.x-size/2) > 0)
 		player.x -= player.speed;
-	if(keys[rightKey] && (player.x+player.size/2) < canvas.width)
+	if(keys[rightKey] && (player.x+size/2) < canvas.width)
 		player.x += player.speed;
 
-	//debug
-	var settings = "debug here";
+	//set velocity control for the ai agent
+	
 
-	//document.getElementById('debug').innerHTML = settings;
+	//ai behavior
+	if(ai.charged){
+		//keep moving to target
+		if(Math.round(dist(ai,ai.target)) > ai.maxSpeed){
+			//acceleration / decceleration
+			ai.vel.x = velControl(ai.x,ai.vel.x,ai.target.x);
+			ai.vel.y = velControl(ai.y,ai.vel.y,ai.target.y);
+
+			ai.x += ai.vel.x;
+			ai.y += ai.vel.y;
+		}
+		//reset target
+		else{
+			setTimeout(function(){ai.charged = true;},ai.delay);
+			targetPlayer();
+			ai.charged = false;
+		}
+	}
+
+	//ai hit the player
+	if(!gracePeriod && collided()){
+		console.log("I'M HIT!");
+		gracePeriod = true;
+		setTimeout(function(){gracePeriod = false;},800);		//0.8 second grace period for the player
+	}
+
+
+	//debug
+	//var settings = "(" + ai.target.x + ", " + ai.target.y + ") - " + Math.round(dist(ai,ai.target)) + " - (" + ai.vel.x + ", " + ai.vel.y + ")";
+	var settings = "..."
+
+	document.getElementById('debug').innerHTML = settings;
 }
 
 
