@@ -1,10 +1,9 @@
 //set up the canvas
-var canvas = document.createElement("canvas");
-canvas.id = "game";
+var canvas = document.getElementById("game");
 var ctx = canvas.getContext("2d");
 canvas.width = 320;
 canvas.height = 320;
-document.body.appendChild(canvas);
+//document.body.appendChild(canvas);
 
 var size = 16;
 
@@ -145,6 +144,15 @@ function changeFeature(feat){
 		player.speed = (player.speed == 3 ? 5 : 3);
 	}else if(feat == "background"){
 		backgroundColor = (backgroundColor == "#dedede" ? "#000" : "#dedede");
+	}
+}
+
+//changes all the values of the feature toggles from on/off
+function changeChecks(selectType){
+	let val = (selectType == "deselect" ? false : true);
+	let checkboxes = document.getElementsByClassName("featTog");
+	for(let c=0;c<checkboxes.length;c++){
+		checkboxes[c].checked = val;
 	}
 }
 

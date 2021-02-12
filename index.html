@@ -7,15 +7,18 @@
 				text-align: center;
 			}
 			#juiceTog{
-				text-align: left;
+				width:150px;
+				height:320px;
 				border:1px solid black;
-				width:320px;
-				margin-left: auto;
-				margin-right: auto;
-				padding-left: 10px;
-				padding-bottom: 10px
-				padding-top:10px;
-				margin-bottom: 10px
+				padding-right: 0;
+			    margin-left: auto;
+			    text-align: left;
+			    padding-left:5px;
+				margin-top: auto;
+				margin-bottom: auto;
+			}
+			#juiceTog input{
+				margin-right: 7px;
 			}
 			#game{
 				width:320px;
@@ -23,18 +26,36 @@
 				border:2px solid #000000;
 				padding-left: 0;
 				padding-right: 0;
-				margin-left: auto;
+				margin-left: 10px;
 				margin-right: auto;
+				margin-top: auto;
+				margin-bottom: auto;
 			}
 		</style>
 	</head>
 	<body onload='init()'>
-		
-		<div id='juiceTog'>
-			<input type='checkbox' class='featTog' id='color'>Try me<br>
-			<input type='checkbox' class='featTog' id='speed'>Try me 2<br>
-			<input type='checkbox' class='featTog' id='background'>Try me 3<br>
-		</div>
 		<!--<div id="debugBar"><p id="debug" style="color:white">...</p></div>-->
+		<div id='container' style='display: flex'>
+			<div id='juiceTog'>
+				<h4 style='text-align: center'>Feature Toggles</h4>
+
+				<!-- put juicy features here -->
+				<input type='checkbox' class='featTog' id='color'>Color<br>
+				<input type='checkbox' class='featTog' id='speed'>Speed<br>
+				<input type='checkbox' class='featTog' id='background'>Background<br>
+				<input type='checkbox' class='featTog' id='dash'>Dash<br>
+				<input type='checkbox' class='featTog' id='slomo'>Slow-mo<br>
+				<input type='checkbox' class='featTog' id='trail'>Trail<br>
+				<input type='checkbox' class='featTog' id='dark'>Darken Screen<br>
+
+				<!-- select/deselect all button -->
+				<div style='text-align: center;margin-top: 50px'>
+					<input type='button' class='featTog' id='deselect' value='Deselect All' onclick='changeChecks("deselect")'>
+					<input type='button' class='featTog' id='select' value='Select All' style='margin-top: 5px' onclick='changeChecks("select")'>
+				</div>
+			</div>
+			<canvas id='game'>Browser not supported for HMTL5</canvas>
+		</div>
+		
 		<script src="code.js"></script>
 	</body>
