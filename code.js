@@ -14,6 +14,8 @@ var camera = {
 	y : 0
 };
 
+var backgroundColor = "#dedede";
+
 //KEYS
 
 // directionals
@@ -35,7 +37,8 @@ var player = {
 	x : canvas.width/2,
 	y : canvas.height/2,
 	size : 16,
-	speed : 3
+	speed : 3,
+	color : '#f00'
 }
 
 
@@ -109,13 +112,13 @@ function render(){
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	
 	//background
-	ctx.fillStyle = "#dedede";
+	ctx.fillStyle = backgroundColor;
 	ctx.fillRect(0,0,canvas.width, canvas.height);
 	
 	/*   add draw functions here  */
 
 	//draw a red box to represent the player
-	ctx.fillStyle = "#f00";
+	ctx.fillStyle = player.color
 	ctx.fillRect(player.x-player.size/2,player.y-player.size/2,player.size,player.size)
 	
 	ctx.restore();
@@ -127,7 +130,22 @@ function render(){
 
 //game initialization function
 function init(){
+	let checkboxes = document.getElementsByClassName("featTog");
+	for(let c=0;c<checkboxes.length;c++){
+		checkboxes[c].onchange = function(){changeFeature(checkboxes[c].id)};
+	}
+}
 
+//changes some feature of the game to show juiciness
+function changeFeature(feat){
+	console.log("changing " + feat);
+	if(feat == "color"){
+		player.color = (player.color == "#f00" ? "#00f" : "#f00");
+	}else if(feat == "speed"){
+		player.speed = (player.speed == 3 ? 5 : 3);
+	}else if(feat == "background"){
+		backgroundColor = (backgroundColor == "#dedede" ? "#000" : "#dedede");
+	}
 }
 
 //main game loop
@@ -150,13 +168,13 @@ function main(){
 	}
 
 	//movement
-	if(keys[upKey])
+	if(keys[upKey] && (player.y-player.size/2) > 0)
 		player.y -= player.speed;
-	if(keys[downKey])
+	if(keys[downKey] && (player.y+player.size/2) < canvas.height)
 		player.y += player.speed;
-	if(keys[leftKey])
+	if(keys[leftKey] && (player.x-player.size/2) > 0)
 		player.x -= player.speed;
-	if(keys[rightKey])
+	if(keys[rightKey] && (player.x+player.size/2) < canvas.width)
 		player.x += player.speed;
 
 	//debug
