@@ -37,7 +37,7 @@ var player = {
 	color : '#f00',
 	trail : [],
 	ct : 0,			//trail interval
-	pt : 20			//pause amount (ms)
+	pt : 200		//pause time (ms)
 }
 
 //attacking ai
@@ -57,11 +57,14 @@ var ai = {
 var size = 16;			//size of player and ai objects
 
 //features
-var draw_trail = false;
+var draw_trail = false;			//player trail feature for movement
 
 var gracePeriod = false;		//grace period for the player if it gets hit
 var darkScreen = false;			//show screen dark when hit
 var dt = 0;						//incrase radius of dark screen
+
+var pauseOnHit = false;			//feature for pausing characters on hit
+var paused = false;				//if players are currently paused
 
 
 
@@ -249,13 +252,15 @@ function render(){
 
 	//draw dark screen
 	if(darkScreen && gracePeriod){
-		dt+=2;
+		if(!paused)
+			dt+=2;
 
+		let delay = (pauseOnHit ? 10 : 20)
 
 		// Create gradient (with modifier for pause effect)
 		var grd = ctx.createRadialGradient(
-		160,160,140+(dt < player.pt ? 0 : dt),
-		160,160,200+(dt < player.pt ? 0 : dt));
+		160,160,140+(dt < delay ? 0 : dt),
+		160,160,200+(dt < delay ? 0 : dt));
 		grd.addColorStop(0,"rgba(255, 255, 255, 0)");
 		grd.addColorStop(1,"black");
 
@@ -302,7 +307,7 @@ function changeFeature(feat){
 	else if(feat == "dash"){
 
 	}else if(feat == "pause"){
-		
+		pauseOnHit = !pauseOnHit;
 	}else if(feat == "dark"){
 		darkScreen = !darkScreen;
 	}else if(feat == "camera"){
@@ -353,20 +358,27 @@ function main(){
 	}
 
 	//movement + boundary
-	if(keys[upKey] && (player.y-size/2) > 0)
-		player.y -= player.speed;
-	if(keys[downKey] && (player.y+size/2) < canvas.height)
-		player.y += player.speed;
-	if(keys[leftKey] && (player.x-size/2) > 0)
-		player.x -= player.speed;
-	if(keys[rightKey] && (player.x+size/2) < canvas.width)
-		player.x += player.speed;
+	if(!paused){
+		if(keys[upKey] && (player.y-size/2) > 0)
+			player.y -= player.speed;
+		if(keys[downKey] && (player.y+size/2) < canvas.height)
+			player.y += player.speed;
+		if(keys[leftKey] && (player.x-size/2) > 0)
+			player.x -= player.speed;
+		if(keys[rightKey] && (player.x+size/2) < canvas.width)
+			player.x += player.speed;
+	}
+	
 
 	//if any movement add trail every 250ms
 	if(draw_trail && player.ct == 0){
 		//console.log("new trail")
 		//add new positions repeatedly
 		player.ct = setInterval(function(){
+			//freeze everything on pause
+			if(paused)
+				return;
+
 			//player
 			player.trail.push({x:player.x,y:player.y});
 			if(player.trail.length > 4){
@@ -391,12 +403,16 @@ function main(){
 	if(ai.canMove && ai.charged){
 		//keep moving to target
 		if(Math.round(dist(ai,ai.target)) > ai.maxSpeed){
-			//acceleration / decceleration
-			ai.vel.x = velControl(ai.x,ai.vel.x,ai.target.x);
-			ai.vel.y = velControl(ai.y,ai.vel.y,ai.target.y);
 
-			ai.x += ai.vel.x;
-			ai.y += ai.vel.y;
+			if(!paused){
+				//acceleration / decceleration
+				ai.vel.x = velControl(ai.x,ai.vel.x,ai.target.x);
+				ai.vel.y = velControl(ai.y,ai.vel.y,ai.target.y);
+
+				ai.x += ai.vel.x;
+				ai.y += ai.vel.y;
+			}
+			
 		}
 		//reset target
 		else{
@@ -410,13 +426,19 @@ function main(){
 	if(!gracePeriod && collided()){
 		console.log("I'M HIT!");
 		gracePeriod = true;
+
+		if(pauseOnHit)
+			paused = true;
+
+
+		setTimeout(function(){paused = false;},player.pt);			//remove pause on all movement
 		setTimeout(function(){gracePeriod = false;dt=0;},800);		//0.8 second grace period for the player
 	}
 
 
 	//debug
 	//var settings = "(" + ai.target.x + ", " + ai.target.y + ") - " + Math.round(dist(ai,ai.target)) + " - (" + ai.vel.x + ", " + ai.vel.y + ")";
-	var settings = dt;
+	var settings = paused;
 
 	document.getElementById('debug').innerHTML = settings;
 }
