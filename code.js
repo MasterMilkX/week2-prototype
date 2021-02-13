@@ -34,7 +34,9 @@ var player = {
 	x : canvas.width/2,
 	y : canvas.height/2,
 	speed : 3,
-	color : '#f00'
+	color : '#f00',
+	trail : [],
+	ct : 0
 }
 
 //attacking ai
@@ -47,9 +49,14 @@ var ai = {
 	maxSpeed : player.speed*3,		//max speed to attack (dependent on player)
 	target : {x : 0, y : 0},
 	delay : 500,					//attack delay
-	canMove : true
+	canMove : true,
+	trail : []						//use same trail activation as player
 }
 var gracePeriod = false;		//grace period for the player if it gets hit
+
+
+//features
+var draw_trail = false;
 
 var size = 16;
 
@@ -203,6 +210,28 @@ function render(){
 	/*   add draw functions here  */
 
 	//draw a red box to represent the player
+		//draw trail behind player and ai if active
+		if(draw_trail){
+			//player trail
+			for(let t=1;t<player.trail.length;t++){
+				let tp = player.trail[player.trail.length-1-t];		//get current trail object (from the back)
+				let tsize = size/(1+(0.5*t));
+				ctx.globalAlpha = 0.8-(t*0.25);		//make increasingly transparent
+				ctx.fillStyle = player.color;
+				ctx.fillRect(tp.x-tsize/2,tp.y-tsize/2,tsize,tsize)	//make increasingly small
+			}
+			//ai trail
+			for(let t=1;t<ai.trail.length;t++){
+				let tp = ai.trail[ai.trail.length-1-t];		//get current trail object (from the back)
+				let tsize = size/(1+(0.5*t));
+				ctx.globalAlpha = 0.8-(t*0.25);		//make increasingly transparent
+				ctx.fillStyle = ai.color;
+				ctx.fillRect(tp.x-tsize/2,tp.y-tsize/2,tsize,tsize)	//make increasingly small
+			}
+		}
+
+	ctx.globalAlpha = 1.0;		//reset alpha just in case
+
 	ctx.fillStyle = player.color
 	ctx.fillRect(player.x-size/2,player.y-size/2,size,size)
 
@@ -249,6 +278,7 @@ function changeFeature(feat){
 		backgroundColor = (backgroundColor == "#dedede" ? "#000" : "#dedede");
 	}
 
+	//actual
 	else if(feat == "dash"){
 
 	}else if(feat == "pause"){
@@ -260,7 +290,11 @@ function changeFeature(feat){
 	}else if(feat == "slomo"){
 		
 	}else if(feat == "trail"){
-		
+		draw_trail = !draw_trail;
+
+		//reset trail 
+		player.trail = [];	
+		ai.trail = [];
 	}
 }
 
@@ -308,6 +342,28 @@ function main(){
 	if(keys[rightKey] && (player.x+size/2) < canvas.width)
 		player.x += player.speed;
 
+	//if any movement add trail every 250ms
+	if(draw_trail && player.ct == 0){
+		//console.log("new trail")
+		//add new positions repeatedly
+		player.ct = setInterval(function(){
+			//player
+			player.trail.push({x:player.x,y:player.y});
+			if(player.trail.length > 4){
+				player.trail.shift();
+			}
+
+			//ai
+			ai.trail.push({x:ai.x,y:ai.y});
+			if(ai.trail.length > 4){
+				ai.trail.shift();
+			}
+		},60);
+	}else if(!draw_trail && player.ct != 0){		//stop capturing the trail movement
+		clearInterval(player.ct);
+		player.ct = 0;
+	}
+
 	//set velocity control for the ai agent
 	
 
@@ -340,7 +396,7 @@ function main(){
 
 	//debug
 	//var settings = "(" + ai.target.x + ", " + ai.target.y + ") - " + Math.round(dist(ai,ai.target)) + " - (" + ai.vel.x + ", " + ai.vel.y + ")";
-	var settings = "..."
+	var settings = player.trail.length
 
 	document.getElementById('debug').innerHTML = settings;
 }
