@@ -36,7 +36,8 @@ var player = {
 	speed : 3,
 	color : '#f00',
 	trail : [],
-	ct : 0
+	ct : 0,			//trail interval
+	pt : 20			//pause amount (ms)
 }
 
 //attacking ai
@@ -52,13 +53,16 @@ var ai = {
 	canMove : true,
 	trail : []						//use same trail activation as player
 }
-var gracePeriod = false;		//grace period for the player if it gets hit
 
+var size = 16;			//size of player and ai objects
 
 //features
 var draw_trail = false;
 
-var size = 16;
+var gracePeriod = false;		//grace period for the player if it gets hit
+var darkScreen = false;			//show screen dark when hit
+var dt = 0;						//incrase radius of dark screen
+
 
 
 //////////////////    GENERIC FUNCTIONS   ///////////////
@@ -242,6 +246,22 @@ function render(){
 	//draw ai target
 	ctx.fillStyle = "#000";
 	ctx.fillText("X", ai.target.x, ai.target.y);
+
+	//draw dark screen
+	if(darkScreen && gracePeriod){
+		dt+=2;
+
+
+		// Create gradient (with modifier for pause effect)
+		var grd = ctx.createRadialGradient(
+		160,160,140+(dt < player.pt ? 0 : dt),
+		160,160,200+(dt < player.pt ? 0 : dt));
+		grd.addColorStop(0,"rgba(255, 255, 255, 0)");
+		grd.addColorStop(1,"black");
+
+		ctx.fillStyle = grd;
+		ctx.fillRect(0,0,canvas.width,canvas.height);
+	}
 	
 	ctx.restore();
 }
@@ -284,7 +304,7 @@ function changeFeature(feat){
 	}else if(feat == "pause"){
 		
 	}else if(feat == "dark"){
-		
+		darkScreen = !darkScreen;
 	}else if(feat == "camera"){
 		
 	}else if(feat == "slomo"){
@@ -390,13 +410,13 @@ function main(){
 	if(!gracePeriod && collided()){
 		console.log("I'M HIT!");
 		gracePeriod = true;
-		setTimeout(function(){gracePeriod = false;},800);		//0.8 second grace period for the player
+		setTimeout(function(){gracePeriod = false;dt=0;},800);		//0.8 second grace period for the player
 	}
 
 
 	//debug
 	//var settings = "(" + ai.target.x + ", " + ai.target.y + ") - " + Math.round(dist(ai,ai.target)) + " - (" + ai.vel.x + ", " + ai.vel.y + ")";
-	var settings = player.trail.length
+	var settings = dt;
 
 	document.getElementById('debug').innerHTML = settings;
 }
