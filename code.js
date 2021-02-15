@@ -3,6 +3,10 @@ var canvas = document.getElementById("game");
 var ctx = canvas.getContext("2d");
 canvas.width = 320;
 canvas.height = 320;
+
+var pCanvas = canvas.cloneNode(); //presentation canvas
+var pCtx = canvas.getContext("2d");
+document.body.appendChild(pCanvas);
 //document.body.appendChild(canvas);
 
 //camera
@@ -10,6 +14,11 @@ var camera = {
 	x : 0,
 	y : 0
 };
+
+var curr = (new Date).getTime();
+var endTime = (new Date).getTime();
+var shakeTime = 1000; //amount of time spent shaking in ms
+var shakeIntensity = 5;
 
 
 //up, right, down, left
@@ -68,7 +77,8 @@ var gracePeriod = false;		//grace period for the player if it gets hit
 var darkScreen = false;			//show screen dark when hit
 var dt = 0;						//incrase radius of dark screen
 
-var dash = false;			//feature for dashing when pressing "a button"
+var dash = false;			//feature for dashing when pressing "a" button
+var camShake = false;		//feature for shaking camera when pressing "b" button
 var pauseOnHit = false;			//feature for pausing characters on hit
 var paused = false;				//if players are currently paused
 
@@ -112,6 +122,18 @@ function moveCamera(){
 }
 
 ////////////////   CAMERA FUNCTIONS   /////////////////
+
+function doShake(intensity){
+	if (camShake) {
+		
+		if (curr > endTime) {
+			endTime = curr + shakeTime;
+		}
+
+		camera.x = Math.random() * intensity * 2 - intensity;
+		camera.y = Math.random() * intensity * 2 - intensity;
+	}
+}
 
 /*
 //doesnt work
@@ -278,9 +300,8 @@ function collided(){
 function render(){
 	ctx.save();
 	//ctx.setTransform(1,0,0,1,0,0);
-	//camera.x += 0.1;
 	moveCamera();
-	ctx.translate(-camera.x, -camera.y);		//camera
+	//ctx.translate(-camera.x, -camera.y);		//camera
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	
 	//background
@@ -384,7 +405,7 @@ function changeFeature(feat){
 	}else if(feat == "dark"){
 		darkScreen = !darkScreen;
 	}else if(feat == "camera"){
-		
+		camShake = !camShake;
 	}else if(feat == "slomo"){
 		
 	}else if(feat == "trail"){
@@ -420,6 +441,16 @@ function main(){
 
 	render();
 
+	curr = (new Date).getTime();
+	if (curr < endTime) {
+		doShake(shakeIntensity);
+	}
+	else {
+		camera.x = 0;
+		camera.y = 0;
+	}
+	pCtx.drawImage(canvas,camera.x,camera.y); // present canvas at x, and y
+
 	//keyboard ticks
 	var akey = anyKey();
 	if(akey && kt == 0){
@@ -428,6 +459,11 @@ function main(){
 		clearInterval(kt);
 		kt = 0;
 		keyTick=0;
+	}
+
+	if(keys[b_key]) {
+		//camera.x = 40;
+		doShake(shakeIntensity);
 	}
 
 	//movement + boundary
