@@ -1,13 +1,13 @@
 //set up the canvas
 var canvas = document.getElementById("game");
-var ctx = canvas.getContext("2d");
 canvas.width = 320;
 canvas.height = 320;
 
 var pCanvas = canvas.cloneNode(); //presentation canvas
-var pCtx = canvas.getContext("2d");
 document.body.appendChild(pCanvas);
-//document.body.appendChild(canvas);
+var ctx = canvas.getContext("2d");
+var pCtx = canvas.getContext("2d");
+
 
 //camera
 var camera = {
