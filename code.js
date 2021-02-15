@@ -11,6 +11,10 @@ var camera = {
 	y : 0
 };
 
+
+//up, right, down, left
+var facingDirection = "right";
+
 var backgroundColor = "#dedede";
 
 //KEYS
@@ -34,6 +38,7 @@ var player = {
 	x : canvas.width/2,
 	y : canvas.height/2,
 	speed : 3,
+	dashSpeed : 8,
 	color : '#f00',
 	trail : [],
 	ct : 0,			//trail interval
@@ -63,6 +68,7 @@ var gracePeriod = false;		//grace period for the player if it gets hit
 var darkScreen = false;			//show screen dark when hit
 var dt = 0;						//incrase radius of dark screen
 
+var dash = false;			//feature for dashing when pressing "a button"
 var pauseOnHit = false;			//feature for pausing characters on hit
 var paused = false;				//if players are currently paused
 
@@ -99,8 +105,72 @@ function anyActionKey(){
 	return (keys[a_key] || keys[b_key]);
 }
 
+function moveCamera(){
+	//if (shake)
+		//camera.x += 10;
+	//ctx.translate(camera.x, camera.y);
+}
 
 ////////////////   CAMERA FUNCTIONS   /////////////////
+
+/*
+//doesnt work
+function shake(amt, time, timeout){
+	var startTime = (new Date()).getTime();
+	interval = time;
+
+	preShakeCamera.x = camera.x;
+	preShakeCamera.y = camera.y;
+
+	shakeAmt = amt;
+
+	//doShake(startTime, interval, timeout);
+	(function doShake(){
+		//preShakeCamera.x = camera.x;
+		//preShakeCamera.y = camera.y;
+
+		var shakeAmtX = Math.random() * shakeAmt * 2 - shakeAmt;
+		var shakeAmtY = Math.random() * shakeAmt * 2 - shakeAmt;
+
+		camera.x += shakeAmtX;
+		camera.y += shakeAmtY;
+		console.log("shake");
+
+		//continue to call until timeout
+		if (((new Date).getTime() - startTime ) <= timeout) {
+			setTimeout(doShake(), interval);
+		}
+	})();
+
+	
+	//setInterval(doShake, 10);
+	stopShake();
+}
+
+
+function doShake(startTime, interval, timeout){
+	preShakeCamera.x = camera.x;
+	preShakeCamera.y = camera.y;
+
+	var shakeAmtX = Math.random() * shakeAmt * 2 - shakeAmt;
+	var shakeAmtY = Math.random() * shakeAmt * 2 - shakeAmt;
+
+	camera.x += shakeAmtX;
+	camera.y += shakeAmtY;
+	console.log("shake");
+
+	//continue to call until timeout
+	if (((new Date).getTime() - startTime ) <= timeout) {
+		setTimeout(doShake(startTime, interval, timeout), interval);
+	}
+}
+
+
+function stopShake(){
+	camera.x = preShakeCamera.x;
+	camera.y = preShakeCamera.y;
+}
+*/
 
 /*  OPTIONAL IF LARGE GAME MAP
 //if within the game bounds
@@ -207,7 +277,10 @@ function collided(){
 
 function render(){
 	ctx.save();
-	//ctx.translate(-camera.x, -camera.y);		//camera
+	//ctx.setTransform(1,0,0,1,0,0);
+	//camera.x += 0.1;
+	moveCamera();
+	ctx.translate(-camera.x, -camera.y);		//camera
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	
 	//background
@@ -305,7 +378,7 @@ function changeFeature(feat){
 
 	//actual
 	else if(feat == "dash"){
-
+		dash = !dash;
 	}else if(feat == "pause"){
 		pauseOnHit = !pauseOnHit;
 	}else if(feat == "dark"){
@@ -359,14 +432,38 @@ function main(){
 
 	//movement + boundary
 	if(!paused){
-		if(keys[upKey] && (player.y-size/2) > 0)
+		if(keys[upKey] && (player.y-size/2) > 0) {
 			player.y -= player.speed;
-		if(keys[downKey] && (player.y+size/2) < canvas.height)
+			facingDirection = "up";
+		}
+		if(keys[downKey] && (player.y+size/2) < canvas.height) {
 			player.y += player.speed;
-		if(keys[leftKey] && (player.x-size/2) > 0)
+			facingDirection = "down";
+		}
+		if(keys[leftKey] && (player.x-size/2) > 0) {
 			player.x -= player.speed;
-		if(keys[rightKey] && (player.x+size/2) < canvas.width)
+			facingDirection = "left";
+		}
+		if(keys[rightKey] && (player.x+size/2) < canvas.width) {
 			player.x += player.speed;
+			facingDirection = "right";
+		}
+
+	//dash
+	if(dash){
+			if(keys[a_key] && facingDirection == "up" && (player.y-size/2) > 0) {
+				player.y -= player.dashSpeed;
+			}
+			if(keys[a_key] && facingDirection == "down" && (player.y+size/2) < canvas.height) {
+				player.y += player.dashSpeed;
+			}
+			if(keys[a_key] && facingDirection == "left" && (player.x-size/2) > 0) {
+				player.x -= player.dashSpeed;
+			}
+			if(keys[a_key] && facingDirection == "right" && (player.x+size/2) < canvas.width) {
+				player.x += player.dashSpeed;
+			}
+		}
 	}
 	
 
