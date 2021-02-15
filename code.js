@@ -6,7 +6,7 @@ canvas.height = 320;
 
 var pCanvas = canvas.cloneNode(); //presentation canvas
 var pCtx = canvas.getContext("2d");
-document.body.appendChild(pCanvas);
+//document.body.appendChild(pCanvas);
 //document.body.appendChild(canvas);
 
 //camera
@@ -17,7 +17,8 @@ var camera = {
 
 var curr = (new Date).getTime();
 var endTime = (new Date).getTime();
-var shakeTime = 1000; //amount of time spent shaking in ms
+//var shakeTime = 1000; //amount of time spent shaking in ms
+var shakeTime = 400; //amount of time spent shaking in ms
 var shakeIntensity = 5;
 
 
@@ -47,6 +48,7 @@ var player = {
 	x : canvas.width/2,
 	y : canvas.height/2,
 	speed : 3,
+	base_speed : 3,
 	dashSpeed : 8,
 	color : '#f00',
 	trail : [],
@@ -252,7 +254,7 @@ function velControl(cur, value, max){
 
 //tries to pass thru the player to attack it
 function targetPlayer(){
-	let ed = player.speed*3;		//extra distance - how much farther to go past the player (so to try to predict trajectory)
+	let ed = player.base_speed*3;		//extra distance - how much farther to go past the player (so to try to predict trajectory)
 
 	//get direction vector
 	let yDir = Math.round(player.y-ai.y);
@@ -559,6 +561,7 @@ function main(){
 	if(!gracePeriod && collided()){
 		console.log("I'M HIT!");
 		gracePeriod = true;
+		doShake(shakeIntensity/2);
 
 		if(pauseOnHit)
 			paused = true;
@@ -573,7 +576,7 @@ function main(){
 	//var settings = "(" + ai.target.x + ", " + ai.target.y + ") - " + Math.round(dist(ai,ai.target)) + " - (" + ai.vel.x + ", " + ai.vel.y + ")";
 	var settings = paused;
 
-	document.getElementById('debug').innerHTML = settings;
+	//document.getElementById('debug').innerHTML = settings;
 }
 
 
